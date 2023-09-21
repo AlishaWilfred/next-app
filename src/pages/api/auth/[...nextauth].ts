@@ -1,75 +1,64 @@
-import prisma from "@/lib/prisma";
-import NextAuth from "next-auth/next";
-import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcrypt";
-import type { NextAuthOptions } from "next-auth";
-const handler:NextAuthOptions = NextAuth({
+import prisma from '@/lib/prisma'
+import { compare } from 'bcrypt'
+import type { NextAuthOptions } from 'next-auth'
+import NextAuth from 'next-auth/next'
+import CredentialsProvider from 'next-auth/providers/credentials'
+
+const options: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-        name: "Sign in",
+      name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "text", placeholder: "abc@gmail.com" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials, req) {
-        console.log({ credentials });
-        const res = await fetch("http://localhost:3000/api/login", {
-          method: "POST",
-          body: JSON.stringify({
-            email: credentials?.email,
-            password: credentials?.password,
-          }),
-          headers: { "Content-Type": "application/json" },
-        });
-        const user = await res.json();
-        console.log({ user });
-        // If no error and we have user data, return it
-        if (res.ok && user) {
-          console.log("HERERERERE");
-          return user;
-        } else {
-          // Return null if user data could not be retrieved
-          console.log("HEERER1");
-          return null;
+        email: {
+          label: 'Email',
+          type: 'email',
+          placeholder: 'your@email.com'
+        },
+        password: {
+          label: 'Password',
+          type: 'password',
+          placeholder: 'Enter Password'
         }
       },
-      // async authorize(credentials, req) {
-      //     if(!credentials) return null
-      //   const user:any=await prisma.user.findUnique({
-      //     where:{
-      //         email:credentials?.email
-      //     }
-      //   })
-      //   if(!user) return null
-      //   const ispasswordValid=await bcrypt.compare(credentials?.password!,user.password)
-      //   if(!ispasswordValid) return null
-
-      //   console.log({user})
-      //   return user
-      // }
-    }),
+      async authorize(credentials) {
+        if (!credentials) return null
+        const user = await prisma.user.findFirst({
+          where: {
+            email: credentials.email
+          }
+        })
+        if (
+          user &&
+          user.password &&
+          (await compare(credentials.password, user.password))
+        ) {
+          return {
+            id: user.id.toString(),
+            name: user.name,
+            email: user.email
+          }
+        } else {
+          return null
+        }
+      }
+    })
   ],
-  pages: {
-    signIn: "api/login",
-  },
-  session: {
-    strategy: "jwt",
-  },
   callbacks: {
-    async jwt({ token, user }) {
+    session({ session, user, token }) {
       return {
-        ...token,
-        ...user,
-      };
+        ...session,
+        user: {
+          ...session.user,
+          ...user,
+          ...(token?.user ? token.user : {})
+        }
+      }
     },
-    async session({ session, token }) {
-      session.user = token as any;
-      return session;
-    },
-  },
-});
+    jwt({ token, user }) {
+      user && (token.user = user)
+      return token
+    }
+  }
+}
 
-export { handler as GET, handler as POST };
-
-
-
+export default NextAuth(options)

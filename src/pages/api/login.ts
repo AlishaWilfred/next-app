@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcrypt";
+import { signJwtAccessToken } from "@/lib/jwt";
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,7 +16,12 @@ export default async function handler(
   if (!user) return "User not found";
   const comparePass = await bcrypt.compare(body.password, user.password);
   if (comparePass && user) {
-    const { password, ...result } = user;
+    const { password, ...resultwithpassword } = user;
+    const accessToken=signJwtAccessToken(resultwithpassword)
+    const result={
+      ...resultwithpassword,
+      accessToken
+    }
     res.status(200).json(result);
   } else {
     res.status(500).json({ error: "Login error" });

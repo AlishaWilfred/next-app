@@ -3,6 +3,7 @@ import { headers } from "next/dist/client/components/headers";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "react-hot-toast";
 
 export default function page() {
   const router = useRouter();
@@ -23,7 +24,6 @@ export default function page() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    console.log({ inputData });
 
     const response = await fetch("/api/signin", {
       method: "POST",
@@ -36,14 +36,12 @@ export default function page() {
         "Content-Type": "application/json",
       },
     });
-    console.log({ response });
     if (response.ok) {
+      toast.success("Registeration Successful");
       router.push("/login");
     } else {
-      console.log("Register error");
+      toast.error("Register error");
     }
-
- 
   };
 
   return (
@@ -80,7 +78,7 @@ export default function page() {
 
         <button
           type="submit"
-          className="bg-blue-700 px-2 py-1 text-white hover:bg-blue-900 hover:ring-2 hover:ring-blue-900 transform transition-all duration-500 ease-out"
+          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
         >
           Submit
         </button>

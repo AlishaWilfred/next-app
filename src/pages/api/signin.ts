@@ -9,7 +9,6 @@ import prisma from '@/lib/prisma'
     res: NextApiResponse
   ) {
     const body=req.body
-    console.log({body})
     const hashPassword=await bcrypt.hash(body.password,12)
     const createUser=await prisma.user.create({
         data:{

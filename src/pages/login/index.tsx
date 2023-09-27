@@ -2,8 +2,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signIn } from 'next-auth/react'
-
+import { signIn } from "next-auth/react";
+import { toast } from "react-hot-toast";
 
 export default function page() {
   const router = useRouter();
@@ -11,7 +11,7 @@ export default function page() {
     email: "",
     password: "",
   });
-
+  const [loading, setLoading] = useState(false);
   const handleChange = (e: any) => {
     setInputData((prev) => {
       return {
@@ -21,28 +21,27 @@ export default function page() {
     });
   };
 
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    signIn("credentials", {
+      email: inputData.email,
+      password: inputData.password,
+      redirect: false, // We handle redirection manually
+      callbackUrl: "/",
+    })
+      .then((callback) => {
+        if (callback?.error) {
+          toast.error("Invalid credentials");
+        }
+        if (callback?.ok && !callback.error) {
+          toast.success("Logged in successfully");
+          router.push("/users");
+        }
+      })
+      .finally(() => setLoading(false));
+  };
 
-const handleSubmit = async (e:any) => {
-  e.preventDefault();
-  console.log({inputData})
-
-  const response = await signIn("credentials", {
-    email: inputData.email,
-    password: inputData.password,
-    redirect: false, // We handle redirection manually
-    callbackUrl:"/"
-  });
-
-  console.log({response})
-
-  if (!response?.error) {
-      console.log({response})
-    router.push("/"); // Redirect to a protected page upon successful login
-  } else {
-    console.log("LOGIN ERROR")
-    // Handle login error
-  }
-};
   return (
     <div className="flex justify-center items-center min-h-screen flex-col">
       <h1 className="text-3xl font-medium mb-4">Sign In</h1>
@@ -62,19 +61,20 @@ const handleSubmit = async (e:any) => {
           name="password"
           placeholder="Enter your password"
           type="password"
+          
           onChange={handleChange}
         />
 
         <button
           type="submit"
-          className="bg-blue-700 px-2 py-1 text-white hover:bg-blue-900 hover:ring-2 hover:ring-blue-900 transform transition-all duration-500 ease-out"
+          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
         >
           Submit
         </button>
       </form>
       <div className="flex items-center gap-3 mt-6">
         <span>Haven't created an account yet?</span>
-        <Link href="/register">
+        <Link href="/signup">
           <span className="text-blue-800 hover:underline">Register</span>
         </Link>
       </div>

@@ -32,6 +32,7 @@ const options: NextAuthOptions = {
           user.password &&
           (await compare(credentials.password, user.password))
         ) {
+          console.log({user})
           return {
             id: user.id.toString(),
             name: user.name,
@@ -58,7 +59,8 @@ const options: NextAuthOptions = {
       user && (token.user = user)
       return token
     }
-  }
+  },
+  // secret:process.env.NEXTAUTH_SECRET
 }
 
 export default NextAuth(options)

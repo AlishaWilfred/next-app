@@ -1,5 +1,10 @@
-
+import { Navbar } from "@/components/Navbar";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
-  return <main>hello</main>;
+  const { data: session } = useSession();
+  console.log({session})
+  return <main>
+    <Navbar session={session}/>
+  </main>;
 }

@@ -11,18 +11,71 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  password String
-  name  String?
-  blogs Blog[]
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  conversationIds String[]
+  conversations   Conversation[] @relation("Conversation")
+
+  seenMessageIds String[]
+  seenMessages   Message[] @relation("Seen")
+
+  accounts Account[]
+  messages Message[]
 }
 
-model Blog {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  author    User    @relation(fields: [authorId], references: [id])
-  authorId  Int
+model Account {
+  id String @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expiresAt         Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Conversation {
+  id String @id @default(uuid())
+
+  createdAt     DateTime @default(now())
+  lastMessageAt DateTime @default(now())
+  name          String?
+  isGroup       Boolean?
+
+  messageIds String[]
+  messages   Message[]
+  userIds    String[]
+  users      User[]   @relation("Conversation")
+}
+
+model Message{
+  id String @id @default(uuid())
+  body String?
+  image String?
+  createdAt DateTime @default(now())
+
+  senderId String
+  sender User @relation(fields: [senderId],references: [id],onDelete: Cascade)
+
+  seenIds String[]
+  seen User[] @relation("Seen")
+
+  conversationId String
+  conversation Conversation @relation(fields: [conversationId],references: [id])
+
+  
 }
